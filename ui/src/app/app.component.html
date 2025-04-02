@@ -1,1 +1,97 @@
-Test Connections: <h1>{{ message }}</h1>
+<div class="main-container">
+
+  <h1>PDF Analyzer</h1>
+
+  <mat-card class="app-card">
+    <mat-card-title>1. Upload PDF</mat-card-title>
+    <mat-card-content>
+      <input
+        type="file"
+        class="visually-hidden"
+        #fileInput
+        (change)="onFileSelected($event)"
+        accept=".pdf"
+        [disabled]="isLoading"
+      />
+      <button mat-stroked-button color="primary" (click)="fileInput.click()" [disabled]="isLoading">
+        <mat-icon>attach_file</mat-icon> Choose File
+      </button>
+      <span class="selected-filename" *ngIf="selectedFile">
+        {{ selectedFile.name }}
+      </span>
+      <button mat-raised-button color="primary" class="upload-button" (click)="onUpload()" [disabled]="!selectedFile || isLoading">
+        <mat-icon *ngIf="!isLoading">upload</mat-icon>
+        <mat-icon *ngIf="isLoading">hourglass_top</mat-icon>
+        {{ isLoading && !analysisMessage ? 'Uploading...' : 'Upload PDF' }}
+      </button>
+      <p *ngIf="uploadMessage" class="feedback-message">{{ uploadMessage }}</p>
+    </mat-card-content>
+  </mat-card>
+
+  <mat-divider *ngIf="uploadedPdfId"></mat-divider>
+
+  <mat-card class="app-card" *ngIf="uploadedPdfId">
+      <mat-card-title>2. Analyze and View Results (PDF ID: {{ uploadedPdfId }})</mat-card-title>
+      <mat-card-content>
+          <button mat-raised-button color="accent" (click)="onAnalyze()" [disabled]="isLoading">
+              <mat-icon *ngIf="!isLoading">biotech</mat-icon>
+              <mat-icon *ngIf="isLoading && analysisMessage.startsWith('Starting')">hourglass_top</mat-icon>
+              {{ isLoading && analysisMessage.startsWith('Starting') ? 'Analyzing...' : 'Analyze Uploaded PDF' }}
+          </button>
+
+          <div *ngIf="isLoading" class="spinner-container">
+              <mat-progress-spinner mode="indeterminate" diameter="30"></mat-progress-spinner>
+              <span>{{ analysisMessage }}</span>
+          </div>
+
+          <p *ngIf="!isLoading && analysisMessage" class="feedback-message">{{ analysisMessage }}</p>
+
+          <div *ngIf="analysisResults.length > 0 && !isLoading" class="results-container">
+              <h3>Extracted Components:</h3>
+              <mat-list role="list">
+                  <mat-list-item role="listitem" *ngFor="let component of analysisResults">
+                      {{ component }}
+                  </mat-list-item>
+              </mat-list>
+
+              <div class="export-buttons" style="margin-top: 20px;">
+                <a mat-stroked-button color="primary"
+                   [href]="'http://localhost:5000/api/v1/analysis_results/' + uploadedPdfId + '/export?format=json'"
+                   download
+                   [class.disabled-link]="isLoading"
+                   aria-disabled="{{isLoading}}"> <mat-icon>file_download</mat-icon>
+                    Export JSON
+                </a>
+                <a mat-stroked-button color="primary" style="margin-left: 10px;"
+                   [href]="'http://localhost:5000/api/v1/analysis_results/' + uploadedPdfId + '/export?format=csv'"
+                   download
+                   [class.disabled-link]="isLoading"
+                   aria-disabled="{{isLoading}}">
+                    <mat-icon>file_download</mat-icon>
+                    Export CSV
+                </a>
+              </div>
+              </div>
+           <div *ngIf="analysisResults.length === 0 && !isLoading && analysisMessage.includes('Found 0 component')" class="export-buttons" style="margin-top: 20px;">
+                <a mat-stroked-button color="primary"
+                   [href]="'/api/v1/analysis_results/' + uploadedPdfId + '/export?format=json'"
+                   download
+                   [class.disabled-link]="isLoading"
+                   aria-disabled="{{isLoading}}">
+                    <mat-icon>file_download</mat-icon>
+                    Export JSON (empty)
+                </a>
+                <a mat-stroked-button color="primary" style="margin-left: 10px;"
+                   [href]="'/api/v1/analysis_results/' + uploadedPdfId + '/export?format=csv'"
+                   download
+                   [class.disabled-link]="isLoading"
+                   aria-disabled="{{isLoading}}">
+                    <mat-icon>file_download</mat-icon>
+                    Export CSV (empty)
+                </a>
+           </div>
+
+      </mat-card-content>
+  </mat-card>
+
+</div>
